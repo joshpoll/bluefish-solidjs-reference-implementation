@@ -9,6 +9,7 @@ import {
 import { useScenegraph } from "./SVG";
 import { NameProvider, useName } from "./Scenegraph";
 import { produce } from "solid-js/store";
+import { Layout } from "./Layout";
 
 export type RowProps = ParentProps<{
   spacing: number;
@@ -53,141 +54,40 @@ export const Row: React.FC<
 export const Row = (props: RowProps) => {
   const [scenegraph, setScenegraph] = useScenegraph();
 
-  const id = useName();
+  // const id = useName();
 
-  setScenegraph(id, {
-    bbox: {
-      x: 0,
-      y: 0,
-      width: 0,
-      height: 0,
-    },
-    children: new Set(),
-  });
-
-  const children = createMemo(() => {
-    return scenegraph[id]?.children ?? new Set();
-  });
-
-  // const bbox = createMemo(() => {
-  //   console.log("recomputing Row");
-  //   console.log("children", children());
-  //   let xOffset = 0;
-  //   let totalHeight = 0;
-
-  //   // if any of the children don't exist yet, return an empty bbox
-  //   for (const child of children()) {
-  //     if (scenegraph[child] === undefined) {
-  //       return {
-  //         x: 0,
-  //         y: 0,
-  //         width: 0,
-  //         height: 0,
-  //       };
-  //     }
-  //   }
-
-  //   for (const child of children()) {
-  //     const childBBox = scenegraph[child]?.bbox;
-  //     // console.log("before", child, scenegraph[child]);
-  //     setScenegraph(child, (old) => {
-  //       console.log(old.bbox.x, xOffset);
-  //       return {
-  //         ...old,
-  //         bbox: {
-  //           ...old.bbox,
-  //         },
-  //       };
-  //     });
-  //     // setScenegraph(child, (old) => {
-  //     //   // fast path: if old bbox is the same as the new bbox, don't update
-  //     //   if (
-  //     //     old.bbox.x === xOffset &&
-  //     //     old.bbox.y === 0 &&
-  //     //     old.bbox.width === childBBox.width &&
-  //     //     old.bbox.height === childBBox.height
-  //     //   ) {
-  //     //     return old;
-  //     //   }
-  //     //   return {
-  //     //     ...old,
-  //     //     bbox: {
-  //     //       ...old.bbox,
-  //     //       x: xOffset,
-  //     //     },
-  //     //   };
-  //     // });
-  //     // console.log("after");
-  //     // xOffset += (childBBox.width ?? 0) + props.spacing;
-  //     // totalHeight = Math.max(totalHeight, childBBox.height ?? 0);
-  //   }
-
-  //   return {
-  //     x: 0, // TODO
-  //     y: 0, // TODO
-  //     width: xOffset - props.spacing,
-  //     height: totalHeight,
-  //   };
+  // setScenegraph(id, {
+  //   bbox: {
+  //     x: 0,
+  //     y: 0,
+  //     width: 0,
+  //     height: 0,
+  //   },
+  //   children: new Set(),
   // });
 
-  // createEffect(() => {
-  //   batch(() => {
-  //     setScenegraph(id, (old) => ({
-  //       ...old,
-  //       bbox: bbox(),
-  //     }));
-  //   });
+  // const children = createMemo(() => {
+  //   return scenegraph[id]?.children ?? new Set();
   // });
 
-  // createEffect(() => {
-  //   batch(() => {
-  //     let xOffset = 0;
-  //     let totalHeight = 0;
-
-  //     for (const child of children()) {
-  //       const childBBox = scenegraph[child]?.bbox;
-  //       setScenegraph(
-  //         child,
-  //         produce((old) => {
-  //           old.bbox.x = xOffset;
-  //         })
-  //       );
-  //       xOffset += (childBBox.width ?? 0) + props.spacing;
-  //       totalHeight = Math.max(totalHeight, childBBox.height ?? 0);
-  //     }
-  //     const bbox = {
-  //       x: 0, // TODO
-  //       y: 0, // TODO
-  //       width: xOffset - props.spacing,
-  //       height: totalHeight,
-  //     };
-
-  //     setScenegraph(id, (old) => ({
-  //       ...old,
-  //       bbox: bbox,
-  //     }));
-  //   });
-  // });
-
-  // perform layout
-  const bbox = createMemo(() => {
+  const layout = (children: Set<string>) => {
     // if any of the children don't exist yet, return an empty bbox
     // this ensures that scenegraph lookups are always valid
-    for (const child of children()) {
-      if (scenegraph[child] === undefined) {
-        return {
-          x: 0,
-          y: 0,
-          width: 0,
-          height: 0,
-        };
-      }
-    }
+    // for (const child of children) {
+    //   if (scenegraph[child] === undefined) {
+    //     return {
+    //       x: 0,
+    //       y: 0,
+    //       width: 0,
+    //       height: 0,
+    //     };
+    //   }
+    // }
 
     let xOffset = 0;
     let totalHeight = 0;
 
-    for (const child of children()) {
+    for (const child of children) {
       // TODO: I could curry this and make a setChildBBox function...
       setScenegraph(
         child,
@@ -206,23 +106,29 @@ export const Row = (props: RowProps) => {
       width: xOffset - props.spacing,
       height: totalHeight,
     };
-  });
+  };
+
+  // perform layout
+  // const bbox = createMemo(() => {
+  //   return layout(children());
+  // });
 
   // keep scenegraph up to date
-  createEffect(() => {
-    setScenegraph(id, (old) => ({
-      ...old,
-      bbox: bbox(),
-    }));
-  });
+  // createEffect(() => {
+  //   setScenegraph(id, (old) => ({
+  //     ...old,
+  //     bbox: bbox(),
+  //   }));
+  // });
 
-  return (
-    <g
-      transform={`translate(${scenegraph[id].bbox.x ?? 0}, ${
-        scenegraph[id].bbox.y ?? 0
-      })`}
-    >
-      {props.children}
-    </g>
-  );
+  // return (
+  //   <g
+  //     transform={`translate(${scenegraph[id].bbox.x ?? 0}, ${
+  //       scenegraph[id].bbox.y ?? 0
+  //     })`}
+  //   >
+  //     {props.children}
+  //   </g>
+  // );
+  return <Layout layout={layout}>{props.children}</Layout>;
 };

@@ -10,7 +10,7 @@ import { NameProvider } from "./Scenegraph";
 const App: Component = () => {
   const [spacing, setSpacing] = createSignal(10);
 
-  const barHeights = Array.from({ length: 10 }, () => Math.random() * 100);
+  const barHeights = Array.from({ length: 1000 }, () => Math.random() * 100);
 
   return (
     <div class={styles.App}>
